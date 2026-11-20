@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Your Name | AI Product Manager</title>
+<title>Aisshwarya Yadav | AI Product Manager</title>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#eef2f6;--surface:#fff;--ink:#14213d;--mute:#5b6a82;--line:#c5d0de;--a:#0f8b8d;--btn:#14213d;--btnt:#fff;
@@ -39,28 +39,33 @@ footer{margin-top:56px;font-size:14px;color:var(--mute)}
 <main>
 <header>
   <h1>I turn messy knowledge into AI products people use.</h1>
-  <p>I’m [Your Name], an AI product person who builds the thing before writing the spec. I care about retrieval quality, honest evaluation and products that say “I don’t know” when they should.</p>
+  <p>I’m Aisshwarya Yadav, an AI product person who builds the thing before writing the spec. I care about retrieval quality, honest evaluation and products that say “I don’t know” when they should.</p>
   <div class="cta">
     <a class="btn" href="#rag">See my RAG project</a>
-    <a class="btn o" href="[YOUR LINKEDIN URL]">LinkedIn</a>
-    <a class="btn o" href="mailto:[your@email.com]">Email me</a>
+    <a class="btn o" href="[YOUR LINKEDIN URL]">linkedin.com/in/aisshwaryayadav24</a>
+    <a class="btn o" href="mailto:[your@email.com]">yaishwarya2@gmail.com</a>
   </div>
 </header>
 
 <section id="rag">
   <div class="case">
-    <h2>JioAgent: a chat agent that answers from your documents</h2>
-    <p class="mute">Retrieval-augmented generation (RAG) · built end to end · [Month Year]</p>
+    <h2>BrewLight Agent: a chat agent that answers from your documents</h2>
+    <p class="mute">Retrieval-augmented generation (RAG) · built end to end · [November 2026]</p>
     <div class="cta" style="margin:10px 0 0">
       <a class="btn" href="rag-pipeline.html">Explore the architecture</a>
       <a class="btn o" href="[DEMO VIDEO URL]">Watch the 45-second demo</a>
     </div>
 
     <h3>The problem</h3>
-    <p>[One or two sentences. Example: Knowledge lives in scattered files, and people waste time hunting for answers or get confident wrong ones from a generic chatbot.]</p>
+    <p> Most teams do not have knowledge problem. They have "where did we put that?" problem</p>
 
     <h3>What I built</h3>
-    <p>Two workflows share one knowledge base. The first loads a document from Google Drive, splits it into chunks, embeds each chunk and stores it in Pinecone. The second is a chat agent with short-term memory that searches Pinecone before it replies, so answers come from the source material.</p>
+    <p>I built a Brewlight Agent. You might be thinking what's a Brewlight Agent? Its a RAG chatbot that answers questions from company's database instead of guessing.
+      It is built in two Parts: Ingestion Workflow: It fetches the company's PDF from google drive and split it into chunks, followed by this the embedding is further carried out
+      with the help of Gemini and stored in Pinecone. 
+      In Second Phase: A chat agent is built which checks the knoeldegebase before answering and this memory search is not simple its a vector search which is being performed 
+      with help of Pinecone.
+      Built with n8n, Pinecone, and Google Gemini</p>
 
     <div class="stats">
       <div><b>Ingestion</b><span>Drive → chunks → embeddings → Pinecone</span></div>
@@ -69,12 +74,25 @@ footer{margin-top:56px;font-size:14px;color:var(--mute)}
     </div>
 
     <h3>Decisions I made</h3>
-    <p><b>Same embedding model on both sides.</b> Documents and questions use Gemini embeddings, so similarity search compares like with like.</p>
-    <p><b>Chunking over model choice.</b> [Add what you changed, such as chunk size or overlap, and how the answers improved.]</p>
-    <p><b>Retrieval as a tool, not a default.</b> The agent decides when to look things up, which keeps small talk fast and factual answers grounded.</p>
+    <p><b>Same embedding model on both sides.</b> I used Gemini embeddings both while loading the document and while searching it. If kept different then that would affect the search and that could cause the search to stop working, so I kept them identical.</p>
+    <p><b>Keeping ingestion and search in sync.</b> Initially, it returned nothing, post investigation found that the document was stored in one Pinecone namespace while it was looking for other. Now, both use the same index and namespace, and I checked that first whenever answers look wrong.</p>
+    <p><b>Honest "I don't know" over a confident guess.</b> I aksed the agent to answer only from what it retreives.For a company assistant a wrong answer may lead to a disaster, rather than no answer.</p>
 
     <h3>What I’d do next</h3>
-    <p>Add source citations to every answer, and build a test set of real questions to measure accuracy instead of judging by feel.</p>
+    <p>Right now I test the agent by asking it a few questions and seeing if the answers feel right. Next, I want to write down a set of real questions with the correct answers, so I can see exactly how often it gets them right every time I change something.</p>
+
+    <h3><b>Core Concepts covered in this Project</b></h3>
+    <p>
+     <b>Large language model (LLM):</b>	The Gemini chat model that reads the question and writes the answer
+     <b>RAG (retrieval-augmented generation):</b>	The whole pipeline: retrieve relevant text first, then generate an answer from it
+     <b>Embeddings	Gemini Embeddings:</b> turn text into vectors that capture meaning
+     <b>Vector database	Pinecone:</b> stores the vectors and finds the closest ones to a question
+     <b>Semantic search:</b>	Finding chunks by meaning, not exact keywords, so “time off” can match “annual leave”
+     <b>Chunking:</b>	The Recursive Character Text Splitter cuts documents into smaller pieces
+     <b>AI agent:</b>	BrewlightAgent decides whether to search and how to answer
+     <b>Tool use (function calling):</b>	The Pinecone vector store is a tool the agent can choose to call
+     <b>Memory / context:</b>	Simple Memory keeps earlier turns so follow-up questions work
+     <b>System prompt:</b>	The instructions that gave the agent its role and its “answer only from the handbook” rule</p>
 
     <h3>Built with</h3>
     <ul class="chips"><li>n8n</li><li>Pinecone</li><li>Google Gemini</li><li>Google Drive</li><li>Recursive text splitter</li></ul>
@@ -87,7 +105,7 @@ footer{margin-top:56px;font-size:14px;color:var(--mute)}
 </section>
 
 <footer>
-  <p>[Your Name] · [City, Country] · <a href="[YOUR LINKEDIN URL]">LinkedIn</a> · <a href="[YOUR GITHUB URL]">GitHub</a></p>
+  <p>Aisshwarya Yadav · Indore,India · <a href="linkedin.com/in/aisshwaryayadav24">LinkedIn</a> · <a href="https://github.com/yaishwarya2-lang">GitHub</a></p>
 </footer>
 </main>
 </body>
