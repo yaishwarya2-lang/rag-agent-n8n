@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How I chose my RAG stack | BrewlightAgent</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f6;--sf:#fff;--ink:#14213d;--mu:#5b6a82;--ln:#c5d0de;--i:#c77d00;--b:#0f8b8d;--q:#5a4fcf;--pick:#14213d;--pickt:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1626;--sf:#17233a;--ink:#e8eef8;--mu:#9aabc6;--ln:#2c3c5a;--i:#f0b440;--b:#3cc6c8;--q:#9a92ff;--pick:#e8eef8;--pickt:#0e1626}}
+:root[data-theme="dark"]{--bg:#0e1626;--sf:#17233a;--ink:#e8eef8;--mu:#9aabc6;--ln:#2c3c5a;--i:#f0b440;--b:#3cc6c8;--q:#9a92ff;--pick:#e8eef8;--pickt:#0e1626}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}
+main{max-width:1080px;margin:0 auto;padding:26px 16px 48px}
+h1{font-size:clamp(26px,4.6vw,42px);font-weight:800;letter-spacing:-.02em;line-height:1.08;margin:0 0 8px;max-width:20ch}
+.lead{color:var(--mu);max-width:64ch;margin:0 0 18px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--q);outline-offset:2px}
+.ctl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.seg{display:flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.seg button{background:none;border:0;padding:7px 14px;font-weight:600;font-size:14px}
+.seg button[aria-pressed=true]{background:var(--pick);color:var(--pickt)}
+.go{border:1.5px solid var(--ink);background:var(--sf);border-radius:999px;padding:7px 14px;font-weight:600;font-size:14px}
+.go.on{background:var(--q);color:#fff;border-color:var(--q)}
+.cap{min-height:26px;font-weight:600;color:var(--q);margin:0 0 10px}
+.grid{display:grid;grid-template-columns:190px 1.1fr 1.4fr 1.4fr;gap:10px;align-items:stretch}
+.hd{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);padding:0 12px 6px}
+.row{background:var(--sf);border:1.5px solid var(--ln);border-left:7px solid var(--c);border-radius:12px;margin-bottom:9px;transition:opacity .25s,transform .2s,box-shadow .2s}
+.row.i{--c:var(--i)}.row.b{--c:var(--b)}.row.q{--c:var(--q)}
+.row.dim{opacity:.28}
+.row.hot{box-shadow:0 0 0 3px var(--c);transform:scale(1.008)}
+.head{width:100%;background:none;border:0;text-align:left;padding:10px 12px;display:grid;grid-template-columns:190px 1.1fr 1.4fr 1.4fr;gap:10px;align-items:start}
+.lab b{display:block;font-size:17px}
+.tag{font-style:normal;font-size:11px;font-weight:600;color:var(--c);letter-spacing:.05em;text-transform:uppercase}
+.step{display:none;margin-left:6px;background:var(--c);color:#fff;border-radius:999px;padding:0 7px;font-size:11px}
+.row.hot .step{display:inline-block}
+.pick span{display:inline-block;background:var(--pick);color:var(--pickt);border-radius:8px;padding:4px 10px;font-weight:600;font-size:14px}
+.pick small{display:block;color:var(--mu);font-size:12px;margin-top:3px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chips span{border:1.5px solid var(--ln);border-radius:999px;padding:2px 10px;font-size:13px}
+.det{display:none;padding:2px 14px 14px 14px;border-top:1px dashed var(--ln);margin:0 12px}
+.row.open .det{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-top:12px}
+.det h4{margin:0 0 3px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}
+.det p{margin:0;font-size:14.5px}
+.hint{color:var(--mu);font-size:13px;margin-top:6px}
+a{color:var(--b)}
+@media (max-width:820px){.hd{display:none}.head{grid-template-columns:1fr}.chips:before,.pick:before{display:block;content:attr(data-l);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);width:100%;margin-bottom:2px}.det{grid-template-columns:1fr!important}}
+</style>
+</head>
+<body>
+<main>
+<h1>How I chose my RAG stack, layer by layer</h1>
+<p class="lead">Every layer of BrewlightAgent has more than one good option. Dark chips are what I used. Click a layer to see why, and what went wrong along the way.</p>
+<div class="ctl">
+  <div class="seg" role="group" aria-label="Filter layers">
+    <button data-f="a" aria-pressed="true">All layers</button>
+    <button data-f="i" aria-pressed="false">Ingestion</button>
+    <button data-f="q" aria-pressed="false">Question time</button>
+  </div>
+  <button class="go" id="g1">▶ Load a document</button>
+  <button class="go" id="g2">▶ Ask a question</button>
+</div>
+<p class="cap" id="cap" aria-live="polite"></p>
+<div class="grid hd" style="margin:0"><div>Layer</div><div>My pick</div><div>Open-source options</div><div>Managed options</div></div>
+<div id="rows"></div>
+<p class="hint">Want the node-by-node view? <a href="rag-pipeline.html">Open the workflow explorer</a>.</p>
+</main>
+<script>
+var R=[
+{id:"src",n:"Source",s:"i",pick:"Google Drive",node:"Download file",o:["Local files","S3-compatible storage"],m:["Notion","SharePoint / OneDrive"],why:"The team’s knowledge already lives in Drive, so the flow reads from there instead of asking anyone to copy and paste.",watch:"Swapping the file doesn’t update anything until the ingestion flow runs again."},
+{id:"load",n:"Loading",s:"i",pick:"Default Data Loader",node:"Default Data Loader",o:["LangChain loaders","Unstructured","PyPDF"],m:["Document AI services (OCR)"],why:"It reads the PDF as binary and turns it into text documents with metadata, with no code.",watch:"Scanned PDFs have no text layer, so they need OCR first."},
+{id:"chunk",n:"Chunking",s:"i",pick:"Recursive Character Splitter",node:"Recursive Character Text Splitter",o:["Token splitter","Markdown splitter","Semantic splitter"],m:["Platform defaults"],why:"It breaks at paragraphs first, then sentences, then words, so ideas stay in one piece.",watch:"Chunk size and overlap are the biggest quality levers. I haven’t tuned them yet, and that is next on my list."},
+{id:"emb",n:"Embeddings",s:"b",pick:"Gemini embeddings",node:"Embeddings Google Gemini",o:["sentence-transformers","BGE","Nomic"],m:["OpenAI","Cohere","Voyage"],why:"The same model embeds the documents and the questions, so search compares like with like.",watch:"Use a different model on each side and search quietly breaks."},
+{id:"vec",n:"Vector store",s:"b",pick:"Pinecone",node:"Pinecone Vector Store",o:["Qdrant","Weaviate","Milvus","Chroma","pgvector"],m:["Pinecone Cloud","Qdrant Cloud","Weaviate Cloud","Supabase"],why:"Managed and quick to start, with namespaces to keep different knowledge bases apart.",watch:"My first version returned nothing because ingestion and search used different namespaces."},
+{id:"ret",n:"Retrieval",s:"q",pick:"Vector store as a tool, top 4",node:"Pinecone tool, Limit 4",o:["Hybrid keyword + vector","Metadata filters"],m:["Rerankers"],why:"The agent decides when to look things up, so small talk stays fast and facts come from the document.",watch:"A vague tool description means the agent searches badly or not at all."},
+{id:"llm",n:"Agent and LLM",s:"q",pick:"AI Agent + Gemini",node:"BrewlightAgent, Gemini Chat Model",o:["Llama via Ollama","Mistral"],m:["Gemini","Claude","GPT"],why:"The system prompt says to answer only from retrieved text, and to admit when the handbook doesn’t cover something.",watch:"Preview models have tight rate limits, so I hit a 429 error. Use a stable model and turn on retries."},
+{id:"mem",n:"Memory",s:"q",pick:"Simple Memory",node:"Simple Memory",o:["Redis chat memory","Postgres chat memory"],m:["Managed databases"],why:"It keeps recent turns so follow-ups like “and when must I use it by?” still make sense.",watch:"Old wrong answers stay in memory, so reset the session after fixing a bug."}
+];
+var SEQ={g1:[["src","A document is downloaded from Google Drive."],["load","The loader turns the PDF into text documents."],["chunk","The splitter cuts the text into small chunks."],["emb","Each chunk becomes a Gemini embedding."],["vec","The vectors are saved in Pinecone, in a namespace."]],
+g2:[["llm","A question arrives, and the agent decides to search."],["emb","The question is embedded with the same model."],["vec","Pinecone finds the closest chunks."],["ret","The top 4 chunks go back to the agent."],["llm","Gemini writes an answer using only those chunks."],["mem","The turn is saved so follow-ups make sense."]]};
+var TAG={i:"Ingestion",b:"Both sides",q:"Question time"};
+var box=document.getElementById("rows"),cap=document.getElementById("cap"),timer=null;
+function chips(a){return a.map(function(x){return "<span>"+x+"</span>"}).join("")}
+R.forEach(function(r){
+ var d=document.createElement("section");d.className="row "+r.s;d.id="r-"+r.id;
+ d.innerHTML='<button class="head" aria-expanded="false"><span class="lab"><b>'+r.n+'</b><em class="tag">'+TAG[r.s]+'</em><span class="step"></span></span><span class="pick" data-l="My pick"><span>'+r.pick+'</span><small>n8n: '+r.node+'</small></span><span class="chips" data-l="Open-source">'+chips(r.o)+'</span><span class="chips" data-l="Managed">'+chips(r.m)+'</span></button><div class="det"><div><h4>Why I chose it</h4><p>'+r.why+'</p></div><div><h4>Watch out for</h4><p>'+r.watch+'</p></div></div>';
+ d.querySelector(".head").onclick=function(){var o=d.classList.toggle("open");this.setAttribute("aria-expanded",o)};
+ box.appendChild(d)});
+function clear(){document.querySelectorAll(".row").forEach(function(e){e.classList.remove("hot")});document.querySelectorAll(".step").forEach(function(e){e.textContent=""})}
+function stop(){clearInterval(timer);timer=null;clear();cap.textContent="";document.querySelectorAll(".go").forEach(function(b){b.classList.remove("on")})}
+function play(k,btn){
+ var on=btn.classList.contains("on");stop();if(on)return;
+ btn.classList.add("on");var s=SEQ[k],i=0;
+ function step(){clear();var e=document.getElementById("r-"+s[i][0]);e.classList.add("hot");e.querySelector(".step").textContent=(i+1);cap.textContent="Step "+(i+1)+" of "+s.length+": "+s[i][1];e.scrollIntoView({block:"nearest",behavior:"smooth"});i++;if(i>=s.length){clearInterval(timer);timer=setTimeout(stop,2200)}}
+ step();timer=setInterval(step,2300)}
+document.getElementById("g1").onclick=function(){play("g1",this)};
+document.getElementById("g2").onclick=function(){play("g2",this)};
+document.querySelectorAll(".seg button").forEach(function(b){b.onclick=function(){
+ document.querySelectorAll(".seg button").forEach(function(x){x.setAttribute("aria-pressed",x===b)});
+ var f=b.dataset.f;R.forEach(function(r){document.getElementById("r-"+r.id).classList.toggle("dim",f!=="a"&&r.s!=="b"&&r.s!==f)})}});
+</script>
+</body>
+</html>
