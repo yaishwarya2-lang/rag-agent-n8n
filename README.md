@@ -2,15 +2,14 @@
 
 A chat agent that answers questions from company documents instead of guessing. It says "I couldn't find that" when the answer isn't in the source.
 
-**Live portfolio:** [YOUR PORTFOLIO URL]
-**Interactive architecture:** [YOUR PORTFOLIO URL]/rag-pipeline.html
-**Demo video:** [YOUR VIDEO URL]
+**Live portfolio:** https://yaishwarya2-lang.github.io/rag-agent-n8n/
+**Interactive architecture:** https://yaishwarya2-lang.github.io/rag-agent-n8n/rag-pipeline.html
 
 ![Chat demo](images/demo.png)
 
 ## The problem
 
-[One or two sentences. Example: Knowledge lives in scattered documents, and generic chatbots answer confidently even when they don't know.]
+Company knowledge sits in scattered documents, and generic chatbots answer confidently even when they don't have the facts. I wanted an assistant that answers only from a trusted source and admits when it can't find something.
 
 ## How it works
 
@@ -40,8 +39,8 @@ n8n, Pinecone, Google Gemini (chat and embeddings), Google Drive
 
 - Namespace and embedding model must match between ingestion and retrieval, or search returns nothing.
 - A specific tool description and system prompt decide whether the agent searches and stays grounded.
+- When I swapped in a new document, the old system prompt still described the previous project, so the agent answered as if it knew the old data. Changing the source means updating the prompt too.
 - Free API tiers have rate limits, so add retries and use a stable model.
-- [Add one lesson of your own.]
 
 ## Next steps
 
@@ -51,4 +50,4 @@ n8n, Pinecone, Google Gemini (chat and embeddings), Google Drive
 
 ## Author
 
-[Your Name] · [LinkedIn URL] · [Email]
+Aisshwarya Yadav · [LinkedIn](https://www.linkedin.com/in/aisshwaryayadav24) · [yaishwarya2@gmail.com](mailto:yaishwarya2@gmail.com)
