@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JioAgent: a RAG pipeline, explained</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f6;--surface:#fff;--ink:#14213d;--mute:#5b6a82;--line:#c5d0de;--a:#0f8b8d;--b:#c77d00;--c:#5a4fcf;--sel:#14213d;--selt:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1626;--surface:#17233a;--ink:#e8eef8;--mute:#9aabc6;--line:#2c3c5a;--a:#3cc6c8;--b:#f0b440;--c:#9a92ff;--sel:#e8eef8;--selt:#0e1626}}
+:root[data-theme="dark"]{--bg:#0e1626;--surface:#17233a;--ink:#e8eef8;--mute:#9aabc6;--line:#2c3c5a;--a:#3cc6c8;--b:#f0b440;--c:#9a92ff;--sel:#e8eef8;--selt:#0e1626}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+main{max-width:1040px;margin:0 auto;padding:28px 18px 48px}
+h1{font-size:clamp(28px,5vw,44px);font-weight:800;line-height:1.08;margin:0 0 10px;letter-spacing:-.02em;max-width:18ch}
+.lead{color:var(--mute);max-width:62ch;margin:0 0 22px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.tabs{display:flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+.tabs button{background:none;border:0;padding:8px 16px;font-weight:600}
+.tabs button[aria-pressed=true]{background:var(--sel);color:var(--selt)}
+.play{background:var(--a);color:#fff;border:0;border-radius:999px;padding:9px 18px;font-weight:600}
+:root[data-theme="dark"] .play{color:#06202a}
+button:focus-visible{outline:3px solid var(--c);outline-offset:2px}
+.stage{background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:22px 16px;overflow-x:auto}
+.row{display:flex;align-items:flex-start;gap:0;min-width:max-content}
+.col{display:flex;flex-direction:column;align-items:center}
+.link{width:34px;height:2px;background:var(--line);margin-top:34px;position:relative;flex:none}
+.link:after{content:"";position:absolute;right:-1px;top:-4px;border-left:7px solid var(--line);border-top:5px solid transparent;border-bottom:5px solid transparent}
+.node{width:150px;min-height:70px;background:var(--bg);border:1.5px solid var(--line);border-left:6px solid var(--k);border-radius:10px;padding:9px 11px;text-align:left;transition:transform .15s,background .15s}
+.node b{display:block;font-size:15px;line-height:1.2}
+.node small{color:var(--mute);font-size:12px}
+.node:hover{transform:translateY(-2px)}
+.node[aria-pressed=true]{background:var(--sel);color:var(--selt);border-color:var(--sel);border-left-color:var(--k)}
+.node[aria-pressed=true] small{color:inherit;opacity:.75}
+.subs{display:flex;gap:10px;margin-top:0}
+.drop{width:0;height:22px;border-left:2px dashed var(--line)}
+.subcol{display:flex;flex-direction:column;align-items:center}
+.sub{width:132px;min-height:58px;padding:7px 9px}
+.sub b{font-size:13.5px}
+.cap{font-size:12px;color:var(--mute);margin:2px 0}
+.panel{margin-top:16px;background:var(--surface);border:1.5px solid var(--line);border-left:6px solid var(--k,var(--a));border-radius:12px;padding:16px 18px;min-height:150px}
+.panel h2{margin:0 0 4px;font-size:21px}
+.panel .role{color:var(--mute);font-size:14px;margin:0 0 10px}
+.panel p{margin:6px 0;max-width:70ch}
+.panel .why{font-weight:600}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--mute);margin-top:14px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<main>
+<h1>How my RAG agent learns, then answers</h1>
+<p class="lead">Two workflows, one shared knowledge base. The first loads documents into a vector database. The second is a chat agent that looks things up before it replies. Click any block, or press Walk through.</p>
+<div class="bar">
+  <div class="tabs" role="group" aria-label="Choose workflow">
+    <button id="t0" aria-pressed="true">1. Ingestion</button>
+    <button id="t1" aria-pressed="false">2. Chat agent</button>
+  </div>
+  <button class="play" id="play">Walk through</button>
+</div>
+<div class="stage"><div class="row" id="row"></div></div>
+<div class="panel" id="panel" aria-live="polite"></div>
+<div class="legend">
+  <span><i style="background:var(--b)"></i>Trigger or input</span>
+  <span><i style="background:var(--a)"></i>Data and storage</span>
+  <span><i style="background:var(--c)"></i>AI model or agent</span>
+</div>
+</main>
+<script>
+var T="b",D="a",M="c";
+var flows=[
+[
+ {id:"trig",n:"Manual trigger",s:"Execute workflow",k:T,role:"Starting point",d:"I click one button and the whole load runs. In production this could be a schedule or a webhook that fires when a new file lands in Drive.",why:"Why it matters: ingestion is a repeatable job, not a one-off script."},
+ {id:"http",n:"HTTP request",s:"Pinecone API call",k:D,role:"Talks to Pinecone directly",d:"A GET request to the Pinecone API before loading starts. It is the kind of call used to look up or confirm the index the documents will be written to.",why:"Why it matters: fail early if the vector database is not reachable."},
+ {id:"drive",n:"Download file",s:"Google Drive",k:D,role:"Source of truth",d:"Pulls the raw document from Google Drive. Knowledge stays where the team already keeps it, and re-running the flow picks up the latest version.",why:"Why it matters: no copy-pasting content into a tool."},
+ {id:"store1",n:"Pinecone vector store",s:"Insert documents",k:D,role:"Writes vectors into the index",d:"Takes the chunks and their embeddings and stores them in Pinecone, ready for similarity search.",why:"Why it matters: this is the memory the chat agent will search later.",
+  subs:[
+   {id:"emb1",n:"Embeddings",s:"Google Gemini",k:M,role:"Turns text into numbers",d:"Each chunk is converted into a vector that captures meaning, so similar ideas sit close together even when the wording differs.",why:"The same embedding model must be used at question time, or search quality breaks."},
+   {id:"load",n:"Default data loader",s:"Prepares the document",k:D,role:"Wraps the file as documents",d:"Converts the downloaded file into document objects with metadata, and hands the text to the splitter.",why:"Metadata here is what lets you cite sources later.",
+    child:{id:"split",n:"Recursive text splitter",s:"Chunking",k:D,role:"Cuts text into chunks",d:"Splits the text into smaller pieces, breaking at paragraphs first, then sentences, then words, so ideas stay intact.",why:"Chunk size and overlap are the biggest quality levers in a RAG system. Tune them against real questions."}}
+  ]}
+],
+[
+ {id:"chat",n:"Chat message received",s:"User asks a question",k:T,role:"Entry point",d:"Any message typed into the chat becomes the input to the agent. This is the only step the end user ever sees.",why:"Why it matters: the whole system hides behind a simple chat box."},
+ {id:"agent",n:"JioAgent",s:"AI agent",k:M,role:"The decision maker",d:"Reads the question and the conversation so far, then decides whether to answer directly or first search the knowledge base. It writes the final reply from what it finds.",why:"Why it matters: grounding answers in retrieved text is what cuts down hallucination.",
+  subs:[
+   {id:"llm",n:"Chat model",s:"Google Gemini",k:M,role:"The reasoning engine",d:"The language model that interprets the question, calls the tool, and composes the answer.",why:"Swappable: the pipeline does not depend on one model."},
+   {id:"mem",n:"Simple memory",s:"Conversation history",k:D,role:"Short-term memory",d:"Keeps recent turns so follow-ups like “what about the second one?” still make sense.",why:"Without it, every message would be a fresh start."},
+   {id:"tool",n:"Pinecone vector store",s:"Used as a tool",k:D,role:"Retrieval on demand",d:"Exposed to the agent as a tool. When the agent needs facts, it queries Pinecone and gets back the most relevant chunks.",why:"This is the “R” in RAG.",
+    child:{id:"emb2",n:"Embeddings",s:"Google Gemini",k:M,role:"Embeds the question",d:"Converts the user’s question into a vector using the same model as ingestion, so it can be matched against stored chunks.",why:"Same model in, same model out."}}
+  ]}
+]];
+var cur=0,sel=null,timer=null,order=[];
+var row=document.getElementById("row"),panel=document.getElementById("panel");
+function btn(o,cls){var b=document.createElement("button");b.className="node "+(cls||"");b.style.setProperty("--k","var(--"+o.k+")");b.dataset.id=o.id;b.setAttribute("aria-pressed","false");b.innerHTML="<b>"+o.n+"</b><small>"+o.s+"</small>";b.onclick=function(){stop();pick(o.id)};return b}
+function build(){
+ row.innerHTML="";order=[];var f=flows[cur];
+ f.forEach(function(n,i){
+  if(i)row.appendChild(Object.assign(document.createElement("div"),{className:"link"}));
+  var c=document.createElement("div");c.className="col";c.appendChild(btn(n));order.push(n);
+  if(n.subs){
+   c.appendChild(Object.assign(document.createElement("div"),{className:"drop"}));
+   var w=document.createElement("div");w.className="subs";
+   n.subs.forEach(function(s){
+    var sc=document.createElement("div");sc.className="subcol";sc.appendChild(btn(s,"sub"));order.push(s);
+    if(s.child){sc.appendChild(Object.assign(document.createElement("div"),{className:"drop"}));sc.appendChild(btn(s.child,"sub"));order.push(s.child)}
+    w.appendChild(sc)});
+   c.appendChild(w)}
+  row.appendChild(c)});
+ pick(order[0].id)}
+function pick(id){
+ sel=order.filter(function(o){return o.id===id})[0];
+ document.querySelectorAll(".node").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.id===id)});
+ panel.style.setProperty("--k","var(--"+sel.k+")");
+ panel.innerHTML="<h2>"+sel.n+"</h2><p class='role'>"+sel.role+" · "+sel.s+"</p><p>"+sel.d+"</p><p class='why'>"+sel.why+"</p>"}
+function stop(){clearInterval(timer);timer=null;document.getElementById("play").textContent="Walk through"}
+document.getElementById("play").onclick=function(){
+ if(timer){stop();return}
+ var i=0;pick(order[0].id);this.textContent="Stop";
+ timer=setInterval(function(){i++;if(i>=order.length){stop();return}pick(order[i].id)},2600)};
+[0,1].forEach(function(i){document.getElementById("t"+i).onclick=function(){stop();cur=i;document.getElementById("t0").setAttribute("aria-pressed",i===0);document.getElementById("t1").setAttribute("aria-pressed",i===1);build()}});
+build();
+</script>
+</body>
+</html>

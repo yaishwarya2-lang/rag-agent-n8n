@@ -1,0 +1,228 @@
+{
+  "name": "UploadingPDFtoPineconeBrewL",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1024,
+        48
+      ],
+      "id": "691a2029-9531-45a8-b875-560e8cd24f51",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1wQ8CcVtY5tSuWPiScuygIzIP5sbYQBhb"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -496,
+        48
+      ],
+      "id": "1ded0870-5331-451b-823d-47b95adc101b",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "2SIAeWa1OurFd7mQ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "n8n-gemini-index",
+          "mode": "list",
+          "cachedResultName": "n8n-gemini-index"
+        },
+        "embeddingBatchSize": 8,
+        "options": {
+          "pineconeNamespace": "Brewlight_Labs_Employee_Handbook"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.4,
+      "position": [
+        -128,
+        48
+      ],
+      "id": "c52adf7e-5d3f-40fb-97a2-880eb2b09de1",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "dKDqygYarBjeDUN7",
+          "name": "Pinecone account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        256
+      ],
+      "id": "23ee4908-6e7a-44ff-b6f5-3feee10caa64",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "DTuZ75Mcm8tpcUYU",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -96,
+        256
+      ],
+      "id": "7099821e-5c98-4a0b-a0dd-e1f1a785f1a7",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        464
+      ],
+      "id": "e8171190-6fb2-45e5-8ce6-76d2b2ecb5a9",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "url": "https://api.pinecone.io/indexes",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Api-Key",
+              "value": "pcsk_2zhMaR_3uX4bfNS11vrEQQh7sxAdZjmYaFyzTh3Pg2moBTJ9waTHM5Mkn7dShhhCYMJHv6"
+            },
+            {
+              "name": "X-Pinecone-API-Version",
+              "value": "2026-04"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -800,
+        48
+      ],
+      "id": "34829062-c32f-44d2-880c-60d76cd0831c",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "61210021-dc74-42d4-a69e-1bb7b7d6f21f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4edcb9e04fdbba3efe7e552d56a5270b7f96113508e1229975c5831de5c3093e"
+  },
+  "nodeGroups": [],
+  "id": "YZoYFZTOBNGohQBi",
+  "tags": []
+}
