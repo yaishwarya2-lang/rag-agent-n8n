@@ -84,7 +84,7 @@ var flows=[
 ],
 [
  {id:"chat",n:"Chat message received",s:"User asks a question",k:T,role:"Entry point",d:"Any message typed into the chat becomes the input to the agent. This is the only step the end user ever sees.",why:"Why it matters: the whole system hides behind a simple chat box."},
- {id:"agent",n:"JioAgent",s:"AI agent",k:M,role:"The decision maker",d:"Reads the question and the conversation so far, then decides whether to answer directly or first search the knowledge base. It writes the final reply from what it finds.",why:"Why it matters: grounding answers in retrieved text is what cuts down hallucination.",
+ {id:"agent",n:"BrewlightAgent",s:"AI agent",k:M,role:"The decision maker",d:"Reads the question and the conversation so far, then decides whether to answer directly or first search the knowledge base. It writes the final reply from what it finds.",why:"Why it matters: grounding answers in retrieved text is what cuts down hallucination.",
   subs:[
    {id:"llm",n:"Chat model",s:"Google Gemini",k:M,role:"The reasoning engine",d:"The language model that interprets the question, calls the tool, and composes the answer.",why:"Swappable: the pipeline does not depend on one model."},
    {id:"mem",n:"Simple memory",s:"Conversation history",k:D,role:"Short-term memory",d:"Keeps recent turns so follow-ups like “what about the second one?” still make sense.",why:"Without it, every message would be a fresh start."},
